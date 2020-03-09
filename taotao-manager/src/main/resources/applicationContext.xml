@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://www.springframework.org/schema/aop 
+	http://www.springframework.org/schema/aop/spring-aop-4.0.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+	http://www.springframework.org/schema/util 
+	http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+
+	<!-- 加载配置文件 所有以.properties结尾的文件 spring的配置文件都需要加入classpath：为前缀 
+		  即把db.properties和log4j.properties都加载到了spring容器中 受spring所管理
+		 以key=value的形式存储这两个文件 -->
+	<context:property-placeholder location="classpath:*.properties"/>
+	<!-- 加载数据库连接池 阿里巴巴的德鲁伊
+		通过spring的ioc来创建数据库连接池对象 并且在创建对象的时候 赋初始值
+		${jdbc.url}从spring容器中根据key取value
+		因为这样写到配置文件里 java代码里面也要根据key取value的话可以直接取
+		执行完这个代码 spring容器中就有一个对象dataSource -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+		destroy-method="close">
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="maxActive" value="${jdbc.maxActive}" />
+		<property name="minIdle" value="${jdbc.minIdle}" />
+	</bean>
+	<!-- mapper配置 -->
+	<!-- 让spring管理sqlsessionfactory 使用mybatis和spring整合包中的 -->
+	<!-- 使用spring的ioc来创建mybatis对象 并赋初始值
+	1.数据库连接池对象，ref引用上面的对象
+	2.mybatis的核心配置文件 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 数据库连接池 -->
+		<property name="dataSource" ref="dataSource"/>
+		<!-- 加载mybatis的全局配置文件 -->
+		<property name="configLocation" value="classpath:sqlMapConfig.xml"/>
+	</bean>
+	<!-- 配置Mapper扫描器 -->
+	<!-- 使用spring的ioc来创建spring与mybatis的整合java对象 
+	用于扫描指定路径下的mybatis的映射文件 把mybatis的映射文件自动加载到mybatis的核心配置文件里-->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.yuri.mapper"/>
+	</bean>
+	
+	<!-- 整合service层
+	1.开启扫描service包下面的所有spring注解
+	2.开启声明式事务管理 -->
+	<context:component-scan base-package="com.yuri.service" />
+	<!-- 事务管理器 -->
+	<!-- 管理事务的隔离级别和传播行为 -->
+	<!-- REQUIRED是默认的传播行为 4是默认的隔离级别 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<!-- 数据源 -->
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	<!-- 通知 -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<!-- 传播行为 -->
+			<tx:method name="save*" propagation="REQUIRED"/>
+			<tx:method name="insert*" propagation="REQUIRED"/>
+			<tx:method name="delete*" propagation="REQUIRED"/>
+			<tx:method name="update*" propagation="REQUIRED"/>
+			<tx:method name="find*" propagation="SUPPORTS" read-only="true"/>
+			<tx:method name="get*" propagation="SUPPORTS" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	<!-- 切面 -->
+	<!-- 事务管理器的作用范围 -->
+	<aop:config>
+		<aop:advisor advice-ref="txAdvice"
+			pointcut="execution(* com.yuri.service.*.*(..))"/>
+	</aop:config>
+	
+</beans>
+

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+  <!-- 项目名称 -->
+  <display-name>taotao-manager</display-name>
+  <!-- 欢迎文件列表 默认首页的意思 -->
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>index.htm</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+    <welcome-file>default.html</welcome-file>
+    <welcome-file>default.htm</welcome-file>
+    <welcome-file>default.jsp</welcome-file>
+  </welcome-file-list>
+
+ <!-- 解决post乱码问题 -->
+  <filter>
+	<filter-name>CharacterEncodingFilter</filter-name>
+	<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+	<init-param>
+		<param-name>encoding</param-name>
+		<param-value>utf-8</param-value>
+	</init-param>
+</filter>
+<filter-mapping>
+	<filter-name>CharacterEncodingFilter</filter-name>
+	<url-pattern>/*</url-pattern>
+</filter-mapping>
+  
+  
+  <!-- 加载spring容器 -->
+  <!-- context-param内容参数 就是applicationContext的参数 -->
+  <!-- listener监听器
+   ContextLoaderListener是applicationContext的监听器 它会去监听applicationContext对象的创建
+   当我们运行tomcat的时候 就会创建一个applicationContext对象
+   spring的jar包里有这样一个操作 我们去监听这个applicationContext对象的创建
+   在它创建的时候 就去加载applicationContext.xml这个配置文件-->
+	<!--配置读取spring文件的路径-->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <!-- 这里的applicationConText.xml是你spring配置文件的名字 -->
+        <param-value>classpath:applicationContext.xml</param-value>
+    </context-param>
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+  <!-- 前端控制器 本质上是一个servlet -->
+	<servlet>
+		<servlet-name>springmvc</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:springmvc.xml</param-value>
+		</init-param>
+	</servlet>
+	<!-- 当我们的前端控制器DispatcherServlet的拦截规则为/的时候
+	它就是restful风格了
+	http://localhost:8080/day46/item/itemList 只要以/结尾 不管最后面的后缀是什么都可以 
+	不是restful风格的 拦截规则为*.action 必须以.action结尾 传参为？形式-->
+	<servlet-mapping>
+		<servlet-name>springmvc</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	
+</web-app>

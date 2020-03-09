@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuri.mapper.TbContentMapper">
+	<select id="findTbContentByParentId" parameterType="long" resultType="com.yuri.bean.TbContentCategory">
+		SELECT * FROM tbcontentcategory WHERE parentId = #{parentId}
+	</select>
+	<select id="findTbContentCountByCategoryId" parameterType="long" resultType="int">
+		SELECT COUNT(*) FROM tbcontent WHERE categoryId = #{categoryId}
+	</select>
+	<select id="findTbContentByCategoryId" resultType="com.yuri.bean.TbContent">
+		SELECT * FROM tbcontent WHERE categoryId = #{categoryId} LIMIT #{index},#{pageSize}
+	</select>
+	<delete id="deleteContent" >
+		DELETE FROM tbcontent
+		<where>
+			<foreach collection="ids" open="id in(" close=")" separator="," item="id">
+				#{id}
+			</foreach>
+		</where>
+	</delete>
+	<insert id="addContent" parameterType="com.yuri.bean.TbContent">
+		INSERT INTO tbcontent(categoryId,title,subTitle,titleDesc,url,pic,pic2,content,created,updated)
+		VALUE(#{categoryId},#{title},#{subTitle},#{titleDesc},#{url},#{pic},#{pic2},#{content},#{created},#{updated})
+	</insert>
+</mapper>
